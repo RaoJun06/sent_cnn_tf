@@ -125,14 +125,14 @@ class SentCNN(object):
                         name="pool-r-%s" % j)
                     pooled_outputs_r_wclasses.append(pooled_r_j)
                 # out_tensor: batch_size x 1 x num_class x num_filters
-                out_tensor = tf.concat(2, pooled_outputs_r_wclasses)
+                out_tensor = tf.concat(pooled_outputs_r_wclasses, 2)
                 pooled_outputs_r.append(out_tensor)
                     
         
         # Combine all the pooled features
         num_filters_total = num_filters * len(filter_sizes)
         print "DEBUG: pooled_outputs_u -> %s" % pooled_outputs_u
-        self.h_pool_u = tf.concat(3, pooled_outputs_u)
+        self.h_pool_u = tf.concat(pooled_outputs_u, 3)
         print "DEBUG: h_pool_u -> %s" % self.h_pool_u
         # batch_size x 1 x num_filters_total
         self.h_pool_flat_u = tf.reshape(self.h_pool_u, [-1, 1, num_filters_total])
@@ -140,7 +140,7 @@ class SentCNN(object):
         
         
         print "DEBUG: pooled_outputs_r -> %s" % pooled_outputs_r
-        self.h_pool_r = tf.concat(3, pooled_outputs_r)
+        self.h_pool_r = tf.concat(pooled_outputs_r, 3)
         print "DEBUG: h_pool_r -> %s" % self.h_pool_r
         # h_pool_flat_r: batch_size x num_classes X num_filters_total
         self.h_pool_flat_r = tf.reshape(self.h_pool_r, [-1, num_classes, num_filters_total])
@@ -148,7 +148,7 @@ class SentCNN(object):
         
         # Add dropout layer to avoid overfitting
         with tf.name_scope("dropout"):
-            self.h_features = tf.concat(1, [self.h_pool_flat_u, self.h_pool_flat_r])
+            self.h_features = tf.concat([self.h_pool_flat_u, self.h_pool_flat_r], 1)
             print "DEBUG: h_features -> %s" % self.h_features
             self.h_features_dropped = tf.nn.dropout(self.h_features, 
                                                     self.dropout_keep_prob, 
@@ -159,7 +159,7 @@ class SentCNN(object):
         
         # cosine layer - final scores and predictions
         with tf.name_scope("cosine_layer"):
-            self.dot =  tf.reduce_sum(tf.mul(self.h_dropped_u, 
+            self.dot =  tf.reduce_sum(tf.multiply(self.h_dropped_u, 
                                         self.h_dropped_r), 2)
             print "DEBUG: dot -> %s" % self.dot
             self.sqrt_u = tf.sqrt(tf.reduce_sum(self.h_dropped_u**2, 2))
@@ -174,7 +174,7 @@ class SentCNN(object):
         
         # softmax regression - loss and prediction
         with tf.name_scope("loss"):
-            losses = tf.nn.sparse_softmax_cross_entropy_with_logits(100*self.cosine, self.input_y)
+            losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=100*self.cosine, labels=self.input_y)
             self.loss = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss
             
         # Calculate Accuracy
