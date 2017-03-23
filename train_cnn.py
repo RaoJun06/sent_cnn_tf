@@ -71,11 +71,11 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
         #grad_summaries = []
         #for g, v in grads_and_vars:
         #    if g is not None:
-        #        grad_hist_summary = tf.histogram_summary("{}/grad/hist".format(v.name), g)
-        #        sparsity_summary = tf.scalar_summary("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
+        #        grad_hist_summary = tf.summary.histogram("{}/grad/hist".format(v.name), g)
+        #        sparsity_summary = tf.summary.scalar("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
         #        grad_summaries.append(grad_hist_summary)
         #        grad_summaries.append(sparsity_summary)
-        #grad_summaries_merged = tf.merge_summary(grad_summaries)
+        #grad_summaries_merged = tf.summary.merge(grad_summaries)
 
         # Output directory for models and summaries
         timestamp = str(int(time.time()))
@@ -83,18 +83,18 @@ def train_cnn(x_u_i, x_r_i, y, max_len, U, config, debug=True):
         print("Writing to {}\n".format(out_dir))
 
         # Summaries for loss and accuracy
-        loss_summary = tf.scalar_summary("loss", cnn.loss)
-        acc_summary = tf.scalar_summary("accuracy", cnn.accuracy)
+        loss_summary = tf.summary.scalar("loss", cnn.loss)
+        acc_summary = tf.summary.scalar("accuracy", cnn.accuracy)
 
         # Train Summaries
-        train_summary_op = tf.merge_summary([loss_summary, acc_summary])
+        train_summary_op = tf.summary.merge([loss_summary, acc_summary])
         train_summary_dir = os.path.join(out_dir, "summaries", "train")
-        train_summary_writer = tf.train.SummaryWriter(train_summary_dir, sess.graph)
+        train_summary_writer = tf.summary.FileWriter(train_summary_dir, graph_def=sess.graph_def)
 
         # Dev summaries
-        dev_summary_op = tf.merge_summary([loss_summary, acc_summary])
+        dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
         dev_summary_dir = os.path.join(out_dir, "summaries", "dev")
-        dev_summary_writer = tf.train.SummaryWriter(dev_summary_dir, sess.graph)
+        dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, graph_def=sess.graph_def)
 
         # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
         if debug==False:
